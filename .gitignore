@@ -52,3 +52,6 @@ next-env.d.ts
 data/
 data/raw/
 data/processed/
+/src/generated/prisma
+
+/src/generated/prisma
