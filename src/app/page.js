@@ -1,12 +1,16 @@
 'use client';
-
 import { useState, useEffect } from 'react';
+import ReorderButton from '@/components/ReorderButton';
+import EOQCalculator from '@/components/EOQCalculator';
 
 export default function Dashboard() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sellingItemId, setSellingItemId] = useState(null);
   const [saleAlert, setSaleAlert] = useState(null);
+
+  // NEW STATE: Tracks which item the user wants to run EOQ calculations for
+  const [selectedEoqItem, setSelectedEoqItem] = useState(null);
 
   const fetchItems = async () => {
     try {
@@ -66,7 +70,9 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+
+        {/* Header Section */}
         <header className="border-b border-slate-800 pb-6 flex justify-between items-end">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-white">
@@ -78,6 +84,7 @@ export default function Dashboard() {
           </div>
         </header>
 
+        {/* Alerts Section */}
         {saleAlert && (
           <div
             className={`p-4 rounded-lg border font-medium ${
@@ -90,6 +97,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* KPI Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-slate-900 p-6 rounded-xl border border-slate-800">
             <h3 className="text-sm font-medium text-slate-400">Total Products</h3>
@@ -111,6 +119,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Live Inventory Table */}
         <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
           <div className="p-6 border-b border-slate-800">
             <h2 className="text-xl font-semibold text-white">Live Inventory Matrix</h2>
@@ -129,7 +138,8 @@ export default function Dashboard() {
                     <th className="p-4 text-right">Annual Demand</th>
                     <th className="p-4 text-right">ROP</th>
                     <th className="p-4 text-center">Status</th>
-                    <th className="p-4 text-right">Actions</th>
+                    <th className="p-4 text-right">Sales</th>
+                    <th className="p-4 text-right">Manage</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 text-slate-200">
@@ -155,6 +165,8 @@ export default function Dashboard() {
                             </span>
                           )}
                         </td>
+                        
+                        {/* Log Sale Button */}
                         <td className="p-4 text-right">
                           <button
                             onClick={() => handleLogSale(item.id, 5)}
@@ -164,6 +176,23 @@ export default function Dashboard() {
                             {sellingItemId === item.id ? 'Processing...' : 'Log Sale (-5)'}
                           </button>
                         </td>
+
+                        {/* Open EOQ Calculator or Quick Restock */}
+                        <td className="p-4 text-right flex flex-col gap-2 items-end">
+                          <button 
+                            onClick={() => setSelectedEoqItem(item)}
+                            className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition-colors"
+                          >
+                            EOQ Simulator
+                          </button>
+                          
+                          <div className="w-30">
+                            <ReorderButton 
+                              productId={item.id} 
+                              orderQuantity={item.recommendedEOQ || 100} 
+                            />
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -172,6 +201,37 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* 3. CONDITIONAL EOQ CALCULATOR PANEL */}
+        {/* Only renders if a user clicks the "EOQ Simulator" button on a product row */}
+        {selectedEoqItem && (
+          <div className="mt-8 border-t-4 border-indigo-500 pt-8 relative animate-fade-in-up">
+            
+            <button 
+              onClick={() => setSelectedEoqItem(null)}
+              className="absolute top-8 right-0 text-slate-400 hover:text-red-400 font-bold bg-slate-900 px-3 py-1 rounded border border-slate-700"
+            >
+              ✕ Close Panel
+            </button>
+
+            <h2 className="text-2xl font-bold mb-2 text-white">
+              Inventory Optimization: {selectedEoqItem.productName}
+            </h2>
+            <p className="text-slate-400 mb-6">
+              Adjust holding and ordering costs below to find the most cost-efficient restock quantity.
+            </p>
+
+            {/* Calling the component! Passing the annual demand we calculate from the item */}
+            <div className="text-slate-900">
+              <EOQCalculator 
+                productId={selectedEoqItem.id} 
+                initialDemand={Math.round(selectedEoqItem.avgDailyDemand * 365) || 10000} 
+              />
+            </div>
+            
+          </div>
+        )}
+
       </div>
     </div>
   );

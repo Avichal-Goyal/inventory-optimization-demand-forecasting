@@ -56,15 +56,15 @@ export async function POST(request: Request) {
     
     // Quick EOQ Calculation for the alert
     // (We estimate holding cost at 20% and setup cost at $50 for this demo)
-    const holdingCost = 0.2; 
+    const holdingCost = 0.2;
     const setupCost = 50;
     const annualDemand = item.avgDailyDemand * 365;
     
     // EOQ = sqrt((2 * Demand * Setup Cost) / Holding Cost)
     const eoq = Math.ceil(Math.sqrt((2 * annualDemand * setupCost) / holdingCost));
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       data: updatedItem[0],
       needsReorder,
       eoqRecommendation: needsReorder ? eoq : null

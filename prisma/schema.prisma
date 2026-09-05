@@ -20,7 +20,7 @@ model Item {
   safetyStock      Float
   reorderPoint     Float
   currentStock     Int      // We will generate a starting stock during the seed upload
-  
+
   transactions     InventoryTransaction[]
 }
 
@@ -30,6 +30,6 @@ model InventoryTransaction {
   quantityChange  Int      // Negative for sales, Positive for restocks
   transactionType String   // "SALE" or "RESTOCK"
   createdAt       DateTime @default(now())
-  
+
   item            Item     @relation(fields: [productName], references: [productName])
 }
