@@ -13,15 +13,13 @@ export async function POST(request) {
 
     console.log(`📦 RECEIVED ORDER: ${orderQuantity} units of ${productId}`);
 
-    // ==========================================
     // DATABASE UPDATE LOGIC
-    // ==========================================
     const updatedItem = await prisma.item.update({
     where: { id: parseInt(productId) }, // Converts string "183" to integer 183
     data: { currentStock: { increment: parseInt(orderQuantity) } } // Safety conversion for quantity too
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: `Successfully placed an order for ${orderQuantity} units!`,
       data: updatedItem
     }, { status: 200 });
