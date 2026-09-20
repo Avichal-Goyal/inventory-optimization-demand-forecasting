@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const updatedItem = await prisma.$transaction([
       prisma.item.update({
         where: { id: itemId },
-        data: { currentStock: item.currentStock - quantitySold }
+        data: { currentStock: { decrement: quantitySold } }
       }),
       prisma.inventoryTransaction.create({
         data: {
@@ -53,13 +53,13 @@ export async function POST(request: Request) {
     // Check if we hit the Reorder Point
     const newStock = updatedItem[0].currentStock;
     const needsReorder = newStock <= item.reorderPoint;
-    
+
     // Quick EOQ Calculation for the alert
     // (We estimate holding cost at 20% and setup cost at $50 for this demo)
     const holdingCost = 0.2;
     const setupCost = 50;
     const annualDemand = item.avgDailyDemand * 365;
-    
+
     // EOQ = sqrt((2 * Demand * Setup Cost) / Holding Cost)
     const eoq = Math.ceil(Math.sqrt((2 * annualDemand * setupCost) / holdingCost));
 
